@@ -1,0 +1,26 @@
+{
+  "name": "tle.js",
+  "version": "2.0.0",
+  "description": "TypeScript client for the TLE (Two-Line Element) API with SGP4/SDP4 propagation models",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.14.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "@types/jest": "^29.5.12"
+  },
+  "private": true,
+  "license": "MIT",
+  "keywords": ["tle", "satellite", "space", "api", "sgp4", "sdp4", "sgp8", "sdp8", "orbital", "propagation", "norad", "spacetrack"]
+}

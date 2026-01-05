@@ -148,19 +148,20 @@ export function sgp(elements: OrbitalElements, tsince: number): PropagationResul
   
   // Solve Kepler's equation
   const capu = (xl - xnode) % TWOPI;
-  let epw = capu;
+  let eo1 = capu;
   
   for (let i = 0; i < 10; i++) {
-    const sinepw = Math.sin(epw);
-    const cosepw = Math.cos(epw);
-    const temp1 = axn * sinepw;
-    const temp2 = ayn * cosepw;
-    const temp3 = axn * cosepw;
-    const temp4 = ayn * sinepw;
-    const temp5 = (capu - temp4 + temp1 - epw) / (1.0 - temp3 - temp2) + epw;
-    if (Math.abs(temp5 - epw) < E6A) break;
-    epw = temp5;
+    const sineo1 = Math.sin(eo1);
+    const coseo1 = Math.cos(eo1);
+    let tem5 = 1.0 - coseo1 * axn - sineo1 * ayn;
+    tem5 = (capu - ayn * coseo1 + axn * sineo1 - eo1) / tem5;
+    if (Math.abs(tem5) >= 0.95) {
+      tem5 = tem5 > 0 ? 0.95 : -0.95;
+    }
+    eo1 += tem5;
+    if (Math.abs(tem5) < 1e-12) break;
   }
+  const epw = eo1;
   
   // Short period preliminary quantities
   const sinepw = Math.sin(epw);

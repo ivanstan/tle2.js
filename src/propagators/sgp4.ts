@@ -64,8 +64,7 @@ export function sgp4init(elements: OrbitalElements): Sgp4InitState {
     (0.75 * CK2 * tsi / psisq) * x3thm1 * (8.0 + 3.0 * etasq * (8.0 + etasq)));
   const c1 = bstar * c2;
   const sinio = Math.sin(inclo);
-  const a30vk2 = -1.0 * A3OVK2;
-  const c3 = coef * tsi * a30vk2 * xnodp * AE * sinio / ecco;
+  const c3 = coef * tsi * A3OVK2 * aodp * AE * sinio / ecco;
   const x1mth2 = 1.0 - theta2;
   const c4 = 2.0 * xnodp * coef1 * aodp * betao2 *
     (eta * (2.0 + 0.5 * etasq) + ecco * (0.5 + 2.0 * etasq) -
@@ -90,8 +89,8 @@ export function sgp4init(elements: OrbitalElements): Sgp4InitState {
   const xmcof = ecco > 1.0e-4 ? -TOTHRD * coef * bstar * AE / eeta : 0.0;
   const xnodcf = 3.5 * betao2 * xhdot1 * c1;
   const t2cof = 1.5 * c1;
-  const xlcof = 0.125 * a30vk2 * sinio * (3.0 + 5.0 * cosio) / (1.0 + cosio);
-  const aycof = 0.25 * a30vk2 * sinio;
+  const xlcof = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio) / (1.0 + cosio);
+  const aycof = 0.25 * A3OVK2 * sinio;
   const delmo = Math.pow(1.0 + eta * Math.cos(mo), 3);
   const sinmo = Math.sin(mo);
   const x7thm1 = 7.0 * theta2 - 1.0;
@@ -257,21 +256,26 @@ export function sgp4(elements: OrbitalElements, tsince: number, initState?: Sgp4
   const xlt = xl + xlp;
   const ayn = em * Math.sin(omega) + aynl;
 
-  // Solve Kepler's equation
+  // Solve Kepler's equation (Newton-Raphson iteration)
   const capu = (xlt - xnode) % TWOPI;
-  let epw = capu;
+  let eo1 = capu;
 
   for (let i = 0; i < 10; i++) {
-    const sinepw = Math.sin(epw);
-    const cosepw = Math.cos(epw);
-    const temp1 = axn * sinepw;
-    const temp2 = ayn * cosepw;
-    const temp3 = axn * cosepw;
-    const temp4 = ayn * sinepw;
-    const temp5 = (capu - temp4 + temp1 - epw) / (1.0 - temp3 - temp2) + epw;
-    if (Math.abs(temp5 - epw) < E6A) break;
-    epw = temp5;
+    const sineo1 = Math.sin(eo1);
+    const coseo1 = Math.cos(eo1);
+    // Derivative: 1 - axn*cos(eo1) - ayn*sin(eo1)
+    let tem5 = 1.0 - coseo1 * axn - sineo1 * ayn;
+    // Newton step: (capu - ayn*cos(eo1) + axn*sin(eo1) - eo1) / derivative
+    tem5 = (capu - ayn * coseo1 + axn * sineo1 - eo1) / tem5;
+    // Clamp step size for stability
+    if (Math.abs(tem5) >= 0.95) {
+      tem5 = tem5 > 0 ? 0.95 : -0.95;
+    }
+    eo1 += tem5;
+    if (Math.abs(tem5) < 1e-12) break;
   }
+  
+  const epw = eo1;
 
   // Short period preliminary quantities
   const sinepw = Math.sin(epw);
@@ -292,13 +296,15 @@ export function sgp4(elements: OrbitalElements, tsince: number, initState?: Sgp4
   }
 
   const r = a * (1.0 - ecose);
-  const invr = 1.0 / r;
-  const rdot = XKE * Math.sqrt(a) * esine * invr;
-  const rfdot = XKE * Math.sqrt(pl) * invr;
+  const rdot = XKE * Math.sqrt(a) * esine / r;
+  const rfdot = XKE * Math.sqrt(pl) / r;
   const betal = Math.sqrt(1.0 - elsq);
-  const temp6 = betal / (1.0 + betal);
-  const cosu = invr * (cosepw - axn + ayn * esine * temp6);
-  const sinu = invr * (sinepw - ayn - axn * esine * temp6);
+  // temp = esine / (1 + betal) per satellite.js/Vallado
+  const temp6 = esine / (1.0 + betal);
+  // Use a/r = 1/(1-ecose) not 1/r per satellite.js
+  const aOverR = a / r;  // = 1 / (1 - ecose)
+  const cosu = aOverR * (cosepw - axn + ayn * temp6);
+  const sinu = aOverR * (sinepw - ayn - axn * temp6);
   const u = Math.atan2(sinu, cosu);
   const sin2u = 2.0 * sinu * cosu;
   const cos2u = 2.0 * cosu * cosu - 1.0;

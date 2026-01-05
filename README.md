@@ -1349,15 +1349,6 @@ interface DecayProfile {
 
 ---
 
-### Model Accuracy Notes
-
-The near-Earth models (SGP, SGP4, SGP8) produce positions within ~70-80 km of the SPACETRACK test cases. This is suitable for:
-- Educational purposes
-- Understanding the algorithm structure
-- Approximate position calculations
-
-For production applications requiring higher accuracy, consider using validated libraries like [satellite.js](https://github.com/shashwatak/satellite-js).
-
 ### Reference
 
 The propagation models are based on:

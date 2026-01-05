@@ -1,5 +1,7 @@
 # tle.js
 
+*"The heavens declare the glory of God"*
+
 A TypeScript library for working with Two-Line Element (TLE) sets:
 - **TLE API Client** — Fetch TLEs and satellite positions from [tle.ivanstanojevic.me](https://tle.ivanstanojevic.me/)
 - **SPACETRACK Propagators** — SGP, SGP4, SDP4, SGP8, SDP8 orbit propagation models based on [SPACETRACK Report No. 3](https://celestrak.org/NORAD/documentation/spacetrk.pdf)
